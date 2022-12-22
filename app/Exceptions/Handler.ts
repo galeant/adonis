@@ -15,6 +15,7 @@
 
 import Logger from '@ioc:Adonis/Core/Logger'
 import HttpExceptionHandler from '@ioc:Adonis/Core/HttpExceptionHandler'
+import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
 export default class ExceptionHandler extends HttpExceptionHandler {
   protected statusPages = {
@@ -25,5 +26,39 @@ export default class ExceptionHandler extends HttpExceptionHandler {
 
   constructor () {
     super(Logger)
+  }
+
+  public async handle(error: any, ctx: HttpContextContract) {
+    /**
+     * Self handle the validation exception
+     */
+
+    if(error.code){
+      switch(error.code){
+        case 'E_VALIDATION_FAILURE':
+          return ctx.response.status(422).json({
+            message:error.messages
+          })
+          break;
+        case 'E_UNAUTHORIZED_ACCESS':
+          return ctx.response.status(422).json({
+            message:'Unauthorize'
+          })
+          break;
+      }
+    }else{
+      return ctx.response.status(500).json({
+        message:error.message
+      })
+    }
+
+
+
+
+
+    /**
+     * Forward rest of the exceptions to the parent class
+     */
+    return super.handle(error, ctx)
   }
 }
